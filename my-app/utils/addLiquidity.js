@@ -9,14 +9,14 @@ import {
 
 /**
  * addLiquidity helps add liquidity to the exhange.
- * If user is the initial LP, user decides how much ether/CD 
- * If not the LP, then we must calculate the CD token he/she can add given the Eth he/she
+ * If user is the initial LP, user decides how much ether/REDDY 
+ * If not the LP, then we must calculate the Reddy token he/she can add given the Eth he/she
  * wants to add by keeping the ratios constant
  */
 
 export const addLiquidity = async (
     signer,
-    addCDAmountWei,
+    addReddyAmountWei,
     addEtherAmountWei
 ) => {
     try {
@@ -32,16 +32,16 @@ export const addLiquidity = async (
             EXCHANGE_CONTRACT_ABI,
             signer
         );
-        //since CD tokens are an ERC20, user needs to give the contract "allowance"
-        //to take the CD tokens from him/her
+        //since Reddy tokens are an ERC20, user needs to give the contract "allowance"
+        //to take the Reddy tokens from him/her
         let tx = await tokenContract.approve(
             EXCHANGE_CONTRACT_ADDRESS,
-            addCDAmountWei.toString()
+            addReddyAmountWei.toString()
         );
         await tx.wait();
 
-        //after the contract has the approval, add the ether and cd tokens in liquidity
-        tx = await exchangeContract.addLiquidity(addCDAmountWei,{
+        //after the contract has the approval, add the ether and Reddy tokens into liquidity
+        tx = await exchangeContract.addLiquidity(addReddyAmountWei,{
             value: addEtherAmountWei,
         });
 
@@ -52,24 +52,24 @@ export const addLiquidity = async (
 };
 
 /**
- * calculateCD calculates the CD tokens that need to be added to the liquidity
+ * calculateReddy calculates the Reddy tokens that need to be added to the liquidity
  * given '_addEtherAmountWei' amount of ether
  */
 
-export const calculateCD = async(
+export const calculateReddy = async(
     _addEther = "0",
     etherBalanceContract,
-    cdTokenReserve
+    reddyTokenReserve
 ) => {
     //since _addEther is a string, we need to convert it to a BigNumber before doing anything
     //This can be done using the 'parseEther' function from 'ethers.js'
     const _addEtherAmountWei = utils.parseEther(_addEther);
 
     //The ratio needs to be maintained when we add liquidity. 
-    //We need to let the user know for a specific amount of ether, how many 'CD'
+    //We need to let the user know for a specific amount of ether, how many 'Reddy'
     //tokens he/she can add so price impact is not too large
-    //Ratio is => (amount of CD token to be added)/(CD token balance) = (Eth to be added)/(Eth reserve in contract)
-    const cryptoDevTokenAmount = ((_addEtherAmountWei).mul(cdTokenReserve)).div(etherBalanceContract);
+    //Ratio is => (amount of Reddy token to be added)/(Reddy token balance) = (Eth to be added)/(Eth reserve in contract)
+    const reddyTokenAmount = ((_addEtherAmountWei).mul(reddyTokenReserve)).div(etherBalanceContract);
 
-    return cryptoDevTokenAmount;
+    return reddyTokenAmount;
 };

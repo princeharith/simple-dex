@@ -7,8 +7,8 @@ import{
 } from "../constants";
 
 /**
- * Returns the number of Eth/CD tokens that can be received when the user swaps _swapAmountWei amount 
- * of Eth/CD tokens
+ * Returns the number of Eth/Reddy tokens that can be received when the user swaps _swapAmountWei amount 
+ * of Eth/Reddy tokens
  */
 
 export const getAmountOfTokensReceivedFromSwap = async(
@@ -16,7 +16,7 @@ export const getAmountOfTokensReceivedFromSwap = async(
     provider,
     ethSelected,
     ethBalance,
-    reservedCD
+    reservedReddy
 ) => {
 
     .0
@@ -29,17 +29,17 @@ export const getAmountOfTokensReceivedFromSwap = async(
 
     let amountOfTokens;
     
-    //user wants to input Eth and get out CD token
+    //user wants to input Eth and get out Reddy token
     if (ethSelected){
-        amountOfTokens = await exchangeContract.getAmountOfTokens(
+        amountOfTokens = await exchangeContract.getAmountOfToken(
             _swapAmountWei,
             ethBalance,
-            reservedCD
+            reservedReddy
         );
     } else {
-        amountOfTokens = await exchangeContract.getAmountOfTokens(
+        amountOfTokens = await exchangeContract.getAmountOfToken(
             _swapAmountWei,
-            reservedCD,
+            reservedReddy,
             ethBalance
         );
     }
@@ -48,7 +48,7 @@ export const getAmountOfTokensReceivedFromSwap = async(
 };
 
 /*
-  swapTokens: Swaps `swapAmountWei` of Eth/Crypto Dev tokens with `tokenToBeReceivedAfterSwap` amount of Eth/Crypto Dev tokens.
+  swapTokens: Swaps `swapAmountWei` of Eth/Reddy tokens with `tokenToBeReceivedAfterSwap` amount of Eth/Reddy Dev tokens.
 */
 export const swapTokens = async (
     signer,
@@ -72,22 +72,24 @@ export const swapTokens = async (
 
     let tx;
 
+    //Eth selected, so input value is 'Eth', meaning user wants to swap ETH for Reddy Token
     if (ethSelected) {
-        tx = await exchangeContract.ethToCryptoDevToken(
+        tx = await exchangeContract.ethToReddyToken(
             tokenToBeReceivedAfterSwap,
             {
                 value: swapAmountWei,
             }
         );
+    //User wants to swap Reddy Token for Eth
     } else {
-        //User has to approve 'swapAmountWei' for the contract since CD token is an ERC20
+        //User has to approve 'swapAmountWei' for the contract since Reddy token is an ERC20
         tx = await tokenContract.approve(
             EXCHANGE_CONTRACT_ADDRESS,
             swapAmountWei.toString()
         );
         await tx.wait();
 
-        tx = await exchangeContract.cryptoDevTokenToEth(
+        tx = await exchangeContract.reddyTokenToEth(
             swapAmountWei,
             tokenToBeReceivedAfterSwap
         );

@@ -3,12 +3,12 @@ import Head from "next/head";
 import React,{useEffect, useRef, useState} from "react";
 import Web3Modal from "web3modal";
 import styles from "../styles/Home.module.css";
-import {addLiquidity, calculateCD} from "../utils/addLiquidity";
+import {addLiquidity, calculateReddy} from "../utils/addLiquidity";
 import {
-  getCDTokensBalance,
+  getReddyTokensBalance,
   getEtherBalance,
   getLPTokensBalance,
-  getReserveOfCDTokens,
+  getReserveOfReddyTokens,
 } from "../utils/getAmounts";
 
 import {
@@ -35,14 +35,14 @@ export default function Home() {
   //'ethBalance' keeps track of the Eth held by the user's account
   const [ethBalance, setEtherBalance] = useState(zero);
 
-  //'reservedCD' keeps track of CD tokens reserve balance in Exchange contract
-  const [reservedCD, setReservedCD] = useState(zero);
+  //'reservedReddy' keeps track of Reddy tokens reserve balance in Exchange contract
+  const [reservedReddy, setReservedReddy] = useState(zero);
 
   //keeps track of ether balance in contract
   const [etherBalanceContract, setEtherBalanceContract] = useState(zero);
 
-  //cdBalance is the amount of 'CD' tokens held by user account
-  const [cdBalance, setCDBalance] = useState(zero);
+  //reddyBalance is the amount of 'Reddy' tokens held by user account
+  const [reddyBalance, setReddyBalance] = useState(zero);
 
   //lpBalance is the amount of LP tokens held by user account
   const [lpBalance, setLPBalance] = useState(zero);
@@ -51,17 +51,17 @@ export default function Home() {
   //addEther is the amount of Ether that the user wants to add to liquidity
   const [addEther, setAddEther] = useState(zero);
 
-  //addCDTokens keeps track of the amount of CD tokens that user wants to add to liquidity,
+  //addReddyTokens keeps track of the amount of Reddy tokens that user wants to add to liquidity,
   //in case when there is no initial liquidity and after liquidity gets added, it keeps track
-  //of the CD tokens that user can add given a certain amount of ether
-  const [addCDTokens, setAddCDTokens] = useState(zero);
+  //of the Reddy tokens that user can add given a certain amount of ether
+  const [addReddyTokens, setAddReddyTokens] = useState(zero);
 
   //removeEther is amount of Ether sent back to user based o no. of LP tokens
   const [removeEther, setRemoveEther] = useState(zero);
   
-  //removeCD is the amount of CD tokens that would be sent back to the user based on 
+  //removeReddy is the amount of Reddy tokens that would be sent back to the user based on 
   //number of LP tokens he wants to withdraw
-  const [removeCD, setRemoveCD] = useState(zero);
+  const [removeReddy, setRemoveReddy] = useState(zero);
 
   //amount of LP tokens that the user wants to remove from liquidity
   const [removeLPTokens, setRemoveLPTokens] = useState("0");
@@ -74,7 +74,7 @@ export default function Home() {
   //a swap completes
   const [tokenToBeReceivedAfterSwap, settokenToBeReceivedAfterSwap] = useState(zero);
 
-  //Keeps track if 'Eth' or 'CD' is selected. If Eth is selected, user wants to swap for CD
+  //Keeps track if 'Eth' or 'Reddy Token' is selected. If Eth is selected, user wants to swap for Reddy Token
   const [ethSelected, setEthSelected] = useState(true);
 
   /** Wallet Connection */
@@ -96,16 +96,16 @@ export default function Home() {
       const address = await signer.getAddress();
       //user balances
       const _ethBalance = await getEtherBalance(provider, address);
-      const _cdBalance = await getCDTokensBalance(provider, address);
+      const _reddyBalance = await getReddyTokensBalance(provider, address);
       const _lpBalance = await getLPTokensBalance(provider, address);
       //contract balances
-      const _reservedCD = await getReserveOfCDTokens(provider);
+      const _reservedReddy = await getReserveOfReddyTokens(provider);
       const _ethBalanceContract = await getEtherBalance(provider, null, true);
       
       setEtherBalance(_ethBalance);
-      setCDBalance(_cdBalance);
+      setReddyBalance(_reddyBalance);
       setLPBalance(_lpBalance);
-      setReservedCD(_reservedCD);
+      setReservedReddy(_reservedReddy);
       setEtherBalanceContract(_ethBalanceContract);
     } catch(err) {
       console.error(err);
@@ -115,7 +115,7 @@ export default function Home() {
   /**SWAP FUNCTIONS */
 
   /**
-   * swapTokens swaps 'swapAmountWei' of Eth/CD token with 'tokenToBeReceivedAfterSwap' amount of Eth/CD Tokens
+   * swapTokens swaps 'swapAmountWei' of Eth/Reddy token with 'tokenToBeReceivedAfterSwap' amount of Eth/Reddy Tokens
    */
   const _swapTokens = async() => {
     try {
@@ -147,8 +147,8 @@ export default function Home() {
   };
 
   /**
-   * getAmountOfTokensReceivedFromSwap returns number of Eth/CD that can be received
-   * when user swaps _swapAmountWei amount of Eth/CD token
+   * getAmountOfTokensReceivedFromSwap returns number of Eth/Reddy that can be received
+   * when user swaps _swapAmountWei amount of Eth/Reddy token
    */
 
   const _getAmountOfTokensReceivedFromSwap = async(_swapAmount) => {
@@ -168,7 +168,7 @@ export default function Home() {
           provider,
           ethSelected,
           _ethBalance,
-          reservedCD
+          reservedReddy
         );
         settokenToBeReceivedAfterSwap(amountOfTokens);
       } else {
@@ -183,8 +183,8 @@ export default function Home() {
   
   /**
    * _addLiquidity adds liquidity to the exchange
-   * If user is adding initial, user decides the ether and CD tokens he/she wants to add
-   * If he/she adding after initial, we calculate the CD tokens he can add, given Eth he wants to 
+   * If user is adding initial, user decides the ether and Reddy tokens he/she wants to add
+   * If he/she adding after initial, we calculate the Reddy tokens he can add, given Eth he wants to 
    * add by keeping ratio constant
    */
 
@@ -194,25 +194,25 @@ export default function Home() {
       const addEtherWei = utils.parseEther(addEther.toString());
 
       //Check if vals are zero
-      if (!addCDTokens.eq(zero) && !addEtherWei.eq(zero)) {
+      if (!addReddyTokens.eq(zero) && !addEtherWei.eq(zero)) {
         const signer = await getProviderOrSigner(true);
         setLoading(true);
         //call the addLiquidity function from utils
-        await addLiquidity(signer, addCDTokens, addEtherWei);
+        await addLiquidity(signer, addReddyTokens, addEtherWei);
         setLoading(false);
 
-        //reinit the CD tokens
-        setAddCDTokens(zero);
+        //reinit the Reddy tokens
+        setAddReddyTokens(zero);
 
         //get amounts for all values after liquidity has been added
         await getAmounts();
       } else {
-        setAddCDTokens(zero);
+        setAddReddyTokens(zero);
       }
     } catch(err) {
       console.error(err);
       setLoading(false);
-      setAddCDTokens(zero);
+      setAddReddyTokens(zero);
     }
   };
 
@@ -220,7 +220,7 @@ export default function Home() {
 
   /**
    * _removeLiquidity: Removes the 'removeLPTokensWei' amount of LP tokens from
-   * liquidity and also the calculated amount of 'ether' and 'CD' tokens
+   * liquidity and also the calculated amount of 'ether' and 'Reddy' tokens
    */
 
   const _removeLiquidity = async() => {
@@ -236,13 +236,13 @@ export default function Home() {
 
       //get updated amounts
       await getAmounts();
-      setRemoveCD(zero);
+      setRemoveReddy(zero);
       setRemoveEther(zero);
 
     } catch (err) {
       console.log(err);
       setLoading(false);
-      setRemoveCD(zero);
+      setRemoveReddy(zero);
       setRemoveEther(zero);
     }
   };
@@ -257,18 +257,18 @@ export default function Home() {
       //Get Eth reserves within exchange contract
       const _ethBalance = await getEtherBalance(provider, null, true);
 
-      //get CD token reserves from contract
-      const cryptoDevTokenReserve = await getReserveOfCDTokens(provider);
+      //get Reddy token reserves from contract
+      const reddyTokenReserve = await getReserveOfReddyTokens(provider);
 
       //call getTokensAfterRemove from utils
-      const {_removeEther, _removeCD} = await getTokensAfterRemove(
+      const {_removeEther, _removeReddy} = await getTokensAfterRemove(
         provider,
         removeLPTokenWei,
         _ethBalance, 
-        cryptoDevTokenReserve
+        reddyTokenReserve
         );
         setRemoveEther(_removeEther);
-        setRemoveCD(_removeCD);
+        setRemoveReddy(_removeReddy);
     } catch(err) {
       console.log(err);
     }
@@ -355,17 +355,17 @@ export default function Home() {
             You have:
             <br />
              {/* Convert the BigNumber to string using the formatEther function from ethers.js */}
-             {utils.formatEther(cdBalance)} Crypto Dev Tokens
+             {utils.formatEther(reddyBalance)} Reddy Tokens
              <br />
              {utils.formatEther(ethBalance)} Ether
              <br />
-             {utils.formatEther(lpBalance)} Crypto Dev LP tokens
+             {utils.formatEther(lpBalance)} Reddy LP tokens
           </div>
           <div>
-            {/* If reserved CD is zero, render the state for liquidity zero where we ask the user
+            {/* If reserved Reddy is zero, render the state for liquidity zero where we ask the user
             how much initial liquidity he wants to add else just render the state where liquidity is not zero and
-            we calculate based on the `Eth` amount specified by the user how much `CD` tokens can be added */}
-            {utils.parseEther(reservedCD.toString()).eq(zero) ? (
+            we calculate based on the `Eth` amount specified by the user how much `Reddy` tokens can be added */}
+            {utils.parseEther(reservedReddy.toString()).eq(zero) ? (
               <div>
                 <input
                   type = "number"
@@ -375,9 +375,9 @@ export default function Home() {
                   />
                 <input
                   type = "number"
-                  placeholder = "Amount of Crypto Dev tokens"
+                  placeholder = "Amount of Reddy tokens"
                   onChange={(e) => 
-                    setAddCDTokens(
+                    setAddReddyTokens(
                       BigNumber.from(utils.parseEther(e.target.value || "0"))
                       )
                   }
@@ -394,20 +394,20 @@ export default function Home() {
                   placeholder="Amount of MATIC"
                   onChange={async (e) => {
                     setAddEther(e.target.value || "0");
-                    // calculate the number of CD tokens that
+                    // calculate the number of Reddy tokens that
                     // can be added given  `e.target.value` amount of Eth
-                    const _addCDTokens = await calculateCD(
+                    const _addReddyTokens = await calculateReddy(
                       e.target.value || "0",
                       etherBalanceContract,
-                      reservedCD
+                      reservedReddy
                     );
-                    setAddCDTokens(_addCDTokens);
+                    setAddReddyTokens(_addReddyTokens);
                   }}
                   className={styles.input}
                 />
                 <div className={styles.inputDiv}>
                   {/* Convert the BigNumber to string using the formatEther function from ethers.js */}
-                  {`You will need ${utils.formatEther(addCDTokens)} Crypto Dev
+                  {`You will need ${utils.formatEther(addReddyTokens)} Reddy
                   Tokens`}
                 </div>
                 <button className={styles.button1} onClick={_addLiquidity}>
@@ -421,7 +421,7 @@ export default function Home() {
                 placeholder="Amount of LP Tokens"
                 onChange={async (e) => {
                   setRemoveLPTokens(e.target.value || "0");
-                  //calculate the number of Ether and CD tokens the user would get
+                  //calculate the number of Ether and Reddy tokens the user would get
                   //after he/she removes e.target.value amount of LP tokens
                   await _getTokensAfterRemove(e.target.value || "0");
                 }}
@@ -429,7 +429,7 @@ export default function Home() {
                 />
                 <div className={styles.inputDiv}>
                 {/* Convert the BigNumber to string using the formatEther function from ethers.js */}
-                {`You will get ${utils.formatEther(removeCD)} Crypto Dev Tokens
+                {`You will get ${utils.formatEther(removeReddy)} Reddy Tokens
                 and ${utils.formatEther(removeEther)} Eth`}
               </div>
               <button className={styles.button1} onClick={_removeLiquidity}>
@@ -466,7 +466,7 @@ export default function Home() {
             }}
           >
             <option value="eth">MATIC</option>
-            <option value="cryptoDevToken">CD Token</option>
+            <option value="reddyToken">Reddy Token</option>
           </select>
           <br />
           <div className={styles.inputDiv}>
@@ -474,7 +474,7 @@ export default function Home() {
             {ethSelected
                 ? `You will get ${utils.formatEther(
           tokenToBeReceivedAfterSwap
-          )} Crypto Dev Tokens`
+          )} Reddy Tokens`
                 : `You will get ${utils.formatEther(
           tokenToBeReceivedAfterSwap
           )} MATIC`}
@@ -490,7 +490,7 @@ export default function Home() {
     return (
       <div>
         <Head>
-          <title>Crypto Devs</title>
+          <title>Harry's DEX</title>
           <meta name="description" content="Whitelist-Dapp"/>
           <link rel="icon" href="/favicon.ico" />
         </Head>
@@ -498,7 +498,7 @@ export default function Home() {
           <div>
             <h1 className={styles.title}>Welcome to Harry's Decentralized Exchange!</h1>
             <div className={styles.description}>
-              Exchange MATIC &#60;&#62; Crypto Dev Tokens
+              Exchange MATIC &#60;&#62; Reddy Token
             </div>
             <div>
               <button 

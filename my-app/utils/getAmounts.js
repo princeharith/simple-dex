@@ -17,6 +17,7 @@ export const getEtherBalance = async(provider, address, contract=false) => {
         //ether in exchange contract - if set to false, retrieve balance of user's address
 
         if(contract) {
+            //.getBalance is a function of the Ethers.js blockchain provider object
             const balance = await provider.getBalance(EXCHANGE_CONTRACT_ADDRESS);
             return balance;
         } else {
@@ -30,18 +31,18 @@ export const getEtherBalance = async(provider, address, contract=false) => {
 };
 
 /**
- * getCDTokensBalance: Retrieves the CD tokens in the account of the provided address
+ * getReddyTokensBalance: Retrieves the Reddy tokens in the account of the provided address
  */
 
-export const getCDTokensBalance = async (provider, address) => {
+export const getReddyTokensBalance = async (provider, address) => {
     try {
         const tokenContract = new Contract(
             TOKEN_CONTRACT_ADDRESS,
             TOKEN_CONTRACT_ABI,
             provider
         );
-        const balanceOfCryptoDevTokens = await tokenContract.balanceOf(address);
-        return balanceOfCryptoDevTokens;
+        const balanceOfReddyTokens = await tokenContract.balanceOf(address);
+        return balanceOfReddyTokens;
     } catch(err){
         console.log(err);
     }
@@ -67,11 +68,11 @@ export const getLPTokensBalance = async (provider, address) => {
 };
 
 /**
- * getReserveOfCDTokens retreives the amount of CD tokens in the exchange contract
+ * getReserveOfReddyTokens retreives the amount of Reddy tokens in the exchange contract
  * address
  */
 
-export const getReserveOfCDTokens = async (provider) => {
+export const getReserveOfReddyTokens = async (provider) => {
     try {
         const exchangeContract = new Contract(
             EXCHANGE_CONTRACT_ADDRESS,
